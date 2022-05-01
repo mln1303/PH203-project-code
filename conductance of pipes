@@ -1,0 +1,121 @@
+/*
+Code to find the equivalent conductance of pipes.
+*/
+#include <bits/stdc++.h>
+using namespace std;
+#define forless(i, a, n) for (int i = a; i < n; i++)
+#define pb push_back
+
+vector<string> divide(const string &s)//Function to split the conductances
+{
+	vector<string> v;
+	int k = 2;
+	stack<int> check;//To check if we should split the string or not
+	forless(i, 2, s.length() - 1)
+	{
+		if (s[i] == '(')
+			check.push(1);
+		else if (s[i] == ')')
+			check.pop();
+		else if (s[i] == ',' && check.empty())
+		{
+			v.pb(s.substr(k, i - k));
+			k = i + 1;
+		}
+		
+	}
+	v.pb(s.substr(k, s.length() - 1 - k));
+	return v;
+}
+double parallel(vector<string>);
+double series(vector<string> pipes)//Function to find the series conductance
+{
+	if (pipes.empty())
+		return 0;
+	double ans = 0;
+	for (string s : pipes)
+	{
+		if (int('9' - s[0]) <= 9 && int('9' - s[0]) >= 0)
+			ans += 1 / stod(s);
+		else if (s[0] == 'P' || s[0] == 'p')
+			ans += 1 / parallel(divide(s));
+		else if (s[0] == 'S' || s[0] == 's')
+			ans += 1 / series(divide(s));
+	}
+	return 1 / ans;
+}
+
+double parallel(vector<string> pipes)//Function to find the parallel conductance
+{
+	if (pipes.empty())
+		return 0;
+	double ans = 0;
+	for (string s : pipes)
+	{
+		if (int('9' - s[0]) <= 9 && int('9' - s[0]) >= 0)
+			ans += stod(s);
+		else if (s[0] == 'P' || s[0] == 'p')
+			ans += parallel(divide(s));
+		else if (s[0] == 'S' || s[0] == 's')
+			ans += series(divide(s));
+	}
+	return ans;
+}
+
+int main()
+{
+
+	//Instructions for input
+	cout << "Format for entering the conductances(in L/s) of pipes:" << endl;
+	cout << "(S/s-Series, P/p-Parallel): S(1.2,P(0.5,1,2),S(3.1,4))" << endl;
+	cout << "1. Mention series or parallel before opening brackets." << endl;
+	cout << "2. Brackets and commas are to be placed in given format." << endl;
+	cout << "3. Decimals <1 should have a 0 before decimal point." << endl;
+	cout << "4. Avoid unneccessary spaces.\nEnter the Input:" << endl;
+	string s;
+start:
+	cin >> s;
+
+	// Validating input
+	if (s.find(",.") != string::npos || s.find("(.") != string::npos)//error message if 0 is not entered before decimal point
+	{
+		cout << "Warning! Enter 0 before decimal point.\nInput:" << endl;
+		goto start;
+	}
+	stack<int> st;
+	forless(i, 0, s.length())
+	{
+		if (s[i] == '(')
+		{
+			st.push(1);
+			if (s[i - 1] != 'S' && s[i - 1] != 'P' && s[i - 1] != 's' && s[i - 1] != 'p')//error message if S/P is not mentioned in input.
+			{
+				cout << "Please mention series or parallel before bracket.\nInput:" << endl;
+				goto start;
+			}
+		}
+		else if (s[i] == ')' && !st.empty())
+			st.pop();
+		else if (s[i] == ')' && st.empty())
+		{
+			cout << "!!Recheck the format of input!!.\nInput:" << endl;
+			goto start;
+		}
+	}
+	if (!st.empty())
+	{
+		cout << "!!Recheck the format of input!!.\nInput:" << endl;
+		goto start;
+	}
+
+	//Retrieving answer from string
+	double ans = 0;
+	if (s[0] == 'S' || s[0] == 's')
+		ans = series(divide(s));
+	else if (s[0] == 'P' || s[0] == 'p')
+		ans = parallel(divide(s));
+
+	//Outputs calculated answer
+	cout << "Equivalent Conductance of Pipes: " << ans << " L/s" << endl;//printing the output
+	return 0;
+}
